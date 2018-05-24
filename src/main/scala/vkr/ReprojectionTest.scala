@@ -14,8 +14,8 @@ import org.apache.spark.rdd._
 
 object ReprojectionTest {
 
-  val inputPath = "wasb:///etl-experiments/mosaic-small"
-  val layerPath = "wasb:///vkr/reprojection/layer"
+  val inputPath = "wasb:///etl-experiments/mosaic"
+  val layerPath = "wasb:///vkr/reprojection/layer-big"
 
   def main(args: Array[String]): Unit = {
     val conf =
