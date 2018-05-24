@@ -13,14 +13,14 @@ import org.apache.spark.rdd._
 
 object TilingTest {
 
-  val inputPath = "wasb:///etl-experiments/mosaic-small"
-  val layerPath = "wasb:///vkr/tiling/layer"
+  val inputPath = "wasb:///etl-experiments/mosaic"
+  val layerPath = "wasb:///vkr/tiling/layer-big"
 
   def main(args: Array[String]): Unit = {
     val conf =
       new SparkConf()
         .setMaster("yarn")
-        .setAppName("ChessPartitionerTest")
+        .setAppName("TilingTest")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
 

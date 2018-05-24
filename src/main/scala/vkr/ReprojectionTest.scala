@@ -21,7 +21,7 @@ object ReprojectionTest {
     val conf =
       new SparkConf()
         .setMaster("yarn")
-        .setAppName("ChessPartitionerTest")
+        .setAppName("ReprojectionTest")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
 
