@@ -1,21 +1,21 @@
 package vkr
 
-import geotrellis.proj4.WebMercator
 import geotrellis.raster._
 import geotrellis.raster.resample._
 import geotrellis.spark.io._
 import geotrellis.spark.io.hadoop._
 import geotrellis.spark.io.index._
+import geotrellis.spark.pyramid.Pyramid
 import geotrellis.spark.tiling._
 import geotrellis.spark.{TileLayerRDD, _}
 import geotrellis.vector._
 import org.apache.spark._
 import org.apache.spark.rdd._
 
-object ReprojectionTest {
+object PyramidingTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/reprojection/layer"
+  val layerPath = "wasb:///vkr/pyramiding/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
@@ -47,18 +47,18 @@ object ReprojectionTest {
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
 
-    val (zoom, rdd): (Int, RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]]) =
+    val rdd: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
       TileLayerRDD(tiled, rasterMetaData)
-      .reproject(WebMercator, layoutScheme, Bilinear)
 
     val store: HadoopAttributeStore = HadoopAttributeStore(layerPath)
     val writer = HadoopLayerWriter(layerPath, store)
 
-    val layerId = LayerId("reprojection", zoom)
-
-    val index: KeyIndex[SpatialKey] = ZCurveKeyIndexMethod
-      .createIndex(rdd.metadata.bounds.asInstanceOf[KeyBounds[geotrellis.spark.SpatialKey]])
-
-    writer.write(layerId, rdd, index)
+    Pyramid.upLevels(rdd, layoutScheme, 0, 8, Bilinear) { (rdd, z) =>
+      val layerId = LayerId("landsat", z)
+      if(store.layerExists(layerId)) {
+        new HadoopLayerManager(store).delete(layerId)
+      }
+      writer.write(layerId, rdd, ZCurveKeyIndexMethod)
+    }
   }
 }
