@@ -1,4 +1,4 @@
-name := "demo"
+name := "vkr-experiments"
 version := "0.2.0"
 scalaVersion := "2.11.8"
 organization := "com.azavea"
