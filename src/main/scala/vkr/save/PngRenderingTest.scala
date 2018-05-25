@@ -1,6 +1,7 @@
 package vkr.save
 
 import geotrellis.raster._
+import geotrellis.raster.mapalgebra.local.Add
 import geotrellis.raster.render.ColorMap
 import geotrellis.raster.resample._
 import geotrellis.spark.io.hadoop._
@@ -12,8 +13,9 @@ import org.apache.spark.rdd._
 
 object PngRenderingTest {
 
-  val inputPath = "wasb:///etl-experiments/mosaic-small"
-  val dataFolder = "wasb:///vkr/render/png"
+  val inputRed = "wasb:///etl-experiments/lansat-scene/LC08_L1TP_154032_20180401_20180401_01_RT_B4.TIF"
+  val inputGreen = "wasb:///etl-experiments/lansat-scene/LC08_L1TP_154032_20180401_20180401_01_RT_B3.TIF"
+  val inputBlue = "wasb:///etl-experiments/lansat-scene/LC08_L1TP_154032_20180401_20180401_01_RT_B2.TIF"
 
   def main(args: Array[String]): Unit = {
     val conf =
@@ -25,33 +27,62 @@ object PngRenderingTest {
 
     val sc = new SparkContext(conf)
     try {
-      run(sc)
+      run(sc, args(0))
     } finally {
       sc.stop()
     }
   }
 
-  def run(implicit sc: SparkContext): Unit = {
-
-    val inputRdd: RDD[(ProjectedExtent, Tile)] =
-      sc.hadoopGeoTiffRDD(inputPath)
+  def run(implicit sc: SparkContext, dataFolder: String): Unit = {
 
     val layoutScheme = FloatingLayoutScheme(256)
 
-    val (_, rasterMetaData) =
-      TileLayerMetadata.fromRdd(inputRdd, layoutScheme)
 
-    val tiled: RDD[(SpatialKey, Tile)] =
-      inputRdd
+    val redRdd: RDD[(ProjectedExtent, Tile)] =
+      sc.hadoopGeoTiffRDD(inputRed)
+
+    val (_, rasterMetaData) =
+      TileLayerMetadata.fromRdd(redRdd, layoutScheme)
+
+    val redTiled: RDD[(SpatialKey, Tile)] =
+      redRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
 
-    val rdd: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
-      TileLayerRDD(tiled, rasterMetaData)
+    val red: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
+      TileLayerRDD(redTiled, rasterMetaData)
 
-    val raster = rdd.stitch()
+
+    val greenRdd: RDD[(ProjectedExtent, Tile)] =
+      sc.hadoopGeoTiffRDD(inputGreen)
+
+    val greenTiled: RDD[(SpatialKey, Tile)] =
+      greenRdd
+        .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
+
+    val green: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
+      TileLayerRDD(greenTiled, rasterMetaData)
+
+
+    val blueRdd: RDD[(ProjectedExtent, Tile)] =
+      sc.hadoopGeoTiffRDD(inputBlue)
+
+    val blueTiled: RDD[(SpatialKey, Tile)] =
+      blueRdd
+        .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
+
+    val blue: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
+      TileLayerRDD(blueTiled, rasterMetaData)
+
+
+    val rgbRdd = red.join(green).combineValues {
+      case (red: Tile, green: Tile) => red.localMultiply(65536) + green.localMultiply(256)
+    }
+      .join(blue).combineValues(Add(_, _))
+
 
     val colorMap = ColorMap.fromStringDouble("0:ffffe5ff;0.1:f7fcb9ff;0.2:d9f0a3ff;0.3:addd8eff;0.4:78c679ff;0.5:41ab5dff;0.6:238443ff;0.7:006837ff;1:004529ff").get
-    val ndviPng = raster.tile.renderPng(colorMap)
+    val ndviPng = rgbRdd.stitch().renderPng(colorMap)
+
     withPngHadoopWriteMethods(ndviPng).write(dataFolder + "ndvi.png")(sc)
   }
 }

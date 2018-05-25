@@ -13,7 +13,6 @@ import org.apache.spark.rdd._
 object PyramidingTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/pyramiding/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =

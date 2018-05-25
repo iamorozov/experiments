@@ -14,7 +14,6 @@ import org.apache.spark.rdd._
 object NdviTest {
   val b4Path = "wasb:///etl-experiments/mosaic"
   val b5Path = "wasb:///etl-experiments/mosaic-b5"
-  val layerPath = "wasb:///vkr/ndvi/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
@@ -26,13 +25,13 @@ object NdviTest {
 
     val sc = new SparkContext(conf)
     try {
-      run(sc)
+      run(sc, args(0))
     } finally {
       sc.stop()
     }
   }
 
-  def run(implicit sc: SparkContext): Unit = {
+  def run(implicit sc: SparkContext, layerPath: String): Unit = {
 
     val b4Rdd: RDD[(ProjectedExtent, Tile)] =
       sc.hadoopGeoTiffRDD(b4Path)

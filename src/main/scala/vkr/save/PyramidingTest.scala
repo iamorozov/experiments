@@ -15,7 +15,6 @@ import org.apache.spark.rdd._
 object PyramidingTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/pyramiding/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
@@ -27,13 +26,13 @@ object PyramidingTest {
 
     val sc = new SparkContext(conf)
     try {
-      run(sc)
+      run(sc, args(0))
     } finally {
       sc.stop()
     }
   }
 
-  def run(implicit sc: SparkContext): Unit = {
+  def run(implicit sc: SparkContext, layerPath: String): Unit = {
 
     val inputRdd: RDD[(ProjectedExtent, Tile)] =
       sc.hadoopGeoTiffRDD(inputPath)

@@ -13,7 +13,6 @@ import tutorial.{ZCurvePartitioner, ZCurveReversePartitioner}
 object FullShuffleTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/shuffle/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =

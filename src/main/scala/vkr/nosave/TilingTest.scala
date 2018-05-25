@@ -12,7 +12,6 @@ import org.apache.spark.rdd._
 object TilingTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/tiling/layer-big"
 
   def main(args: Array[String]): Unit = {
     val conf =

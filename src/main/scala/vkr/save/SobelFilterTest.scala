@@ -15,7 +15,6 @@ import org.apache.spark.rdd._
 object SobelFilterTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/sobel/layer"
 
   val kernelX = Kernel(ArrayTile.fromBytes(Array(-1, 0, 1, -2, 0, 2, -1, 0, 1), CellType.fromName("int32"), 3, 3))
   val kernelY = Kernel(ArrayTile.fromBytes(Array(-1, -2, -1, 0, 0, 0, 1, 2, 1), CellType.fromName("int32"), 3, 3))
@@ -30,13 +29,13 @@ object SobelFilterTest {
 
     val sc = new SparkContext(conf)
     try {
-      run(sc)
+      run(sc, args(0))
     } finally {
       sc.stop()
     }
   }
 
-  def run(implicit sc: SparkContext): Unit = {
+  def run(implicit sc: SparkContext, layerPath: String): Unit = {
 
     val inputRdd: RDD[(ProjectedExtent, Tile)] =
       sc.hadoopGeoTiffRDD(inputPath)

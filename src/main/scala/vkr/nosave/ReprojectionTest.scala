@@ -13,13 +13,12 @@ import org.apache.spark.rdd._
 object ReprojectionTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/reprojection/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
       new SparkConf()
         .setMaster("yarn")
-        .setAppName("ReprojectionTest")
+        .setAppName("PyramidingTest")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
 

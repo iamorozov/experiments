@@ -12,7 +12,6 @@ import org.apache.spark.rdd._
 object NdviTest {
   val b4Path = "wasb:///etl-experiments/mosaic"
   val b5Path = "wasb:///etl-experiments/mosaic-b5"
-  val layerPath = "wasb:///vkr/ndvi/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
