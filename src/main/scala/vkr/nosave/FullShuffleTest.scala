@@ -51,6 +51,6 @@ object FullShuffleTest {
 
     tiled
       .partitionBy(ZCurveReversePartitioner(100, bounds))
-      .count()
+      .cache()
   }
 }

@@ -49,7 +49,7 @@ object PyramidingTest {
       TileLayerRDD(tiled, rasterMetaData)
 
     Pyramid.upLevels(rdd, layoutScheme, 0, 8, Bilinear) { (rdd, _) =>
-      rdd.count()
+      rdd.cache()
     }
   }
 }

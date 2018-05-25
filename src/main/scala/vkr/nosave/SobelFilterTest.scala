@@ -68,6 +68,6 @@ object SobelFilterTest {
     val sobelTileLayerRDD: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
       TileLayerRDD(sobelRdd, rasterMetaData)
 
-    sobelTileLayerRDD.count()
+    sobelTileLayerRDD.cache()
   }
 }

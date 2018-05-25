@@ -42,8 +42,6 @@ object TilingTest {
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
 
-    val rdd = TileLayerRDD(tiled, rasterMetaData)
-
-    rdd.count()
+    val rdd = TileLayerRDD(tiled, rasterMetaData).cache()
   }
 }

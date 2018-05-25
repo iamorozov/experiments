@@ -67,6 +67,6 @@ object NdviTest {
         }
     }
 
-    ndviRdd.count()
+    ndviRdd.cache()
   }
 }

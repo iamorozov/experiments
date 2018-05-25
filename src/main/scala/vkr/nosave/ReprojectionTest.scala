@@ -49,6 +49,6 @@ object ReprojectionTest {
       TileLayerRDD(tiled, rasterMetaData)
       .reproject(WebMercator, layoutScheme, Bilinear)
 
-    rdd.count()
+    rdd.cache()
   }
 }
