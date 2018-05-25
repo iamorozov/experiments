@@ -1,4 +1,4 @@
-package vkr
+package vkr.save
 
 import geotrellis.raster._
 import geotrellis.raster.resample._

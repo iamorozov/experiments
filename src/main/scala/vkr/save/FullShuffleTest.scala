@@ -1,6 +1,5 @@
-package vkr
+package vkr.save
 
-import geotrellis.proj4.WebMercator
 import geotrellis.raster._
 import geotrellis.raster.resample._
 import geotrellis.spark.io._
@@ -11,17 +10,18 @@ import geotrellis.spark.{TileLayerRDD, _}
 import geotrellis.vector._
 import org.apache.spark._
 import org.apache.spark.rdd._
+import tutorial.{ZCurvePartitioner, ZCurveReversePartitioner}
 
-object ReprojectionTest {
+object FullShuffleTest {
 
   val inputPath = "wasb:///etl-experiments/mosaic"
-  val layerPath = "wasb:///vkr/reprojection/layer"
+  val layerPath = "wasb:///vkr/shuffle/layer"
 
   def main(args: Array[String]): Unit = {
     val conf =
       new SparkConf()
         .setMaster("yarn")
-        .setAppName("PyramidingTest")
+        .setAppName("FullShuffleTest")
         .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.kryo.registrator", "geotrellis.spark.io.kryo.KryoRegistrator")
 
@@ -43,21 +43,28 @@ object ReprojectionTest {
     val (_, rasterMetaData) =
       TileLayerMetadata.fromRdd(inputRdd, layoutScheme)
 
+    val bounds = rasterMetaData.bounds.asInstanceOf[KeyBounds[SpatialKey]]
+
     val tiled: RDD[(SpatialKey, Tile)] =
       inputRdd
         .tileToLayout(rasterMetaData.cellType, rasterMetaData.layout, Bilinear)
+        .partitionBy(ZCurvePartitioner(100, bounds))
+        .cache()
 
-    val (zoom, rdd): (Int, RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]]) =
-      TileLayerRDD(tiled, rasterMetaData)
-      .reproject(WebMercator, layoutScheme, Bilinear)
+    val repartitioned: RDD[(SpatialKey, Tile)] =
+      tiled
+      .partitionBy(ZCurveReversePartitioner(100, bounds))
+
+    val rdd: RDD[(SpatialKey, Tile)] with Metadata[TileLayerMetadata[SpatialKey]] =
+      TileLayerRDD(repartitioned, rasterMetaData)
 
     val store: HadoopAttributeStore = HadoopAttributeStore(layerPath)
     val writer = HadoopLayerWriter(layerPath, store)
 
-    val layerId = LayerId("reprojection", zoom)
+    val layerId = LayerId("shuffle", 0)
 
     val index: KeyIndex[SpatialKey] = ZCurveKeyIndexMethod
-      .createIndex(rdd.metadata.bounds.asInstanceOf[KeyBounds[geotrellis.spark.SpatialKey]])
+      .createIndex(rdd.metadata.bounds.asInstanceOf[KeyBounds[SpatialKey]])
 
     writer.write(layerId, rdd, index)
   }
