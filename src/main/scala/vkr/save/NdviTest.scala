@@ -61,7 +61,7 @@ object NdviTest {
       case (tile1: Tile, tile2: Tile) =>
         tile1.combineDouble(tile2) { (r, nir) =>
           if (isData(r) && isData(nir)) {
-            (nir - r) / (nir + r)
+            (nir - r) / (nir + r + 1)
           } else {
             Double.NaN
           }
